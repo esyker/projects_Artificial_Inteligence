@@ -1,4 +1,0 @@
-[1018/151258.016:ERROR:filesystem_win.cc(129)] GetFileAttributes C:\Users\diogo\AppData\Local\Microsoft\Edge\User Data\Crashpad\attachments\10ad0307-3c51-4b63-9ced-0e8303353070: O sistema não conseguiu localizar o caminho especificado. (0x3)
-[1018/151258.020:ERROR:filesystem_win.cc(129)] GetFileAttributes C:\Users\diogo\AppData\Local\Microsoft\Edge\User Data\Crashpad\attachments\75e2e69d-da6b-4b76-b20a-6856112d720d: O sistema não conseguiu localizar o caminho especificado. (0x3)
-[1018/151258.021:ERROR:filesystem_win.cc(129)] GetFileAttributes C:\Users\diogo\AppData\Local\Microsoft\Edge\User Data\Crashpad\attachments\d5bb9cc3-297a-4fa6-94d5-76d77879c136: O sistema não conseguiu localizar o caminho especificado. (0x3)
-[1018/151258.022:ERROR:directory_reader_win.cc(43)] FindFirstFile: O sistema não conseguiu localizar o caminho especificado. (0x3)
