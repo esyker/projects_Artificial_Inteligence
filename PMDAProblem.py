@@ -1,10 +1,11 @@
 from search import Problem
-from pprint import pprint
 
 class Doctor():
     def __init__(self,_id,efficiency):
         self._id=_id
         self.efficiency=efficiency
+        
+    
 '''
 class PatientLabel():
     def __init__(self,max_wait_time,consult_time):
@@ -32,9 +33,11 @@ class State():
         
 class PMDAProblem(Problem):
     def __init__(self,file):
+        super().__init__(None)
         self.labels=dict()
         self.doctor_list=list()
-        super().__init__(self.load(file))
+        self.initial=None
+        self.load(file)
         print('Patients:')
         for patient in self.initial.patient_list:
             print('(',patient._id,patient.curr_wait_time,patient.label,patient.remain_consult_time,')')    
@@ -77,7 +80,6 @@ class PMDAProblem(Problem):
         Loads a problem from a (opened) file object f (see below for format specification)
         '''
         patient_list=list()
-        doctor_list=list()
         
         for line in file.readlines():
             info=line.split()
@@ -89,8 +91,7 @@ class PMDAProblem(Problem):
                 patient_list.append(Patient(info[1],int(info[2])
                 ,self.labels[info[3]],int(self.labels[info[3]][1])))
         
-        init_state=State(patient_list)
-        return init_state
+        self.initial=State(patient_list)
     
     
     def search():
