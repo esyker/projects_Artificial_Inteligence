@@ -1,4 +1,5 @@
 from search import Problem
+from itertools import permutations,combinations
 
 class Doctor():
     def __init__(self,_id,efficiency):
@@ -18,8 +19,12 @@ class Patient():
     def __init__(self,_id,curr_wait_time,label,remain_consult_time):
         self.label=label 
         self._id=_id
-        self.curr_wait_time=curr_wait_time
-        self.remain_consult_time=remain_consult_time
+        self.currWaitTime=curr_wait_time
+        self.remainConsultTime=remain_consult_time
+    
+    def toString(self):
+        return ("ID:"+str(self._id)+" currWaitTime:"+str(self.currWaitTime)+
+    " remainConsultTime:"+str(self.remainConsultTime))
     
 
 class State():
@@ -35,30 +40,58 @@ class PMDAProblem(Problem):
     def __init__(self,file):
         super().__init__(None)
         self.labels=dict()
-        self.doctor_list=list()
+        self.doctor_dict=dict()
         self.initial=None
         self.load(file)
         print('Patients:')
         for patient in self.initial.patient_list:
-            print('(',patient._id,patient.curr_wait_time,patient.label,patient.remain_consult_time,')')    
+            print('(',patient._id,patient.currWaitTime,patient.label,patient.remainConsultTime,')')    
         print('\nDoctors:')
-        for doctor in self.doctor_list:
-            print('(',doctor._id,doctor.efficiency,')')
+        for doctor in self.doctor_dict:
+            print('(',self.doctor_dict[doctor]._id,self.doctor_dict[doctor].efficiency,')')
         print('\n Labels:',self.labels)
         
-    def actions(state):
+    def actions(self,state):
         '''
         Returns a list (or a generator) of operators applicable to state s
         '''
-        #possibleactions=combinations(state.patient_list,
-        #                             len(state.patient_list),state.num_doctors)
-        pass
+        #with_ids
+        patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
+        doctor_ids=self.doctor_dict.keys()
+        _min=min(len(doctor_ids),len(patient_ids))
+        doctorsPermutations=[d for d in permutations(doctor_ids,_min)]
+        patientsCombinations=[p for p in combinations(patient_ids,_min)]
+        '''
+        #with pointers
+        _min=min(len(self.doctor_list),len(state.patient_list))
+        doctorsPermutations=[d for d in permutations(self.doctor_list,_min)]
+        patientsCombinations=[p for p in combinations(state.patient_list,_min)]
+        '''
+        possibleActions=list()
+        #_list=[d for d in doctorsPermutations]
+        #print("DOCS:",_list)
+        for docs in doctorsPermutations:
+            for patients in patientsCombinations:
+                action=dict()
+                for i in range(len(docs)):
+                    #print("Appended:(",docs[i],patients[i],")")
+                    action[patients[i]]=docs[i]
+                possibleActions.append(action)
+        #possibleActions[0][0][0]._id=-1
+        return possibleActions
     
-    def result(state,action):
+    def result(self,state,action):
         '''
         Returns the state resulting from applying action a to state s
         '''
-        pass
+        newState=State(state.patient_list.copy())
+        for patient in newState.patient_list:
+            try:
+                doc_id=action[patient._id]
+                patient.remainConsultTime=max(0,patient.remainConsultTime-self.doctor_dict[doc_id].efficiency*5)
+            except KeyError:
+                patient.currWaitTime+=5
+        return newState
     
     def goal_test(state):
         '''
@@ -84,7 +117,8 @@ class PMDAProblem(Problem):
         for line in file.readlines():
             info=line.split()
             if (info[0]=='MD'):
-                self.doctor_list.append(Doctor(info[1],float(info[2])))
+                #dict with keys as doc_id and doctors as values
+                self.doctor_dict[info[1]]=Doctor(info[1],float(info[2])) 
             elif(info[0]=='PL'):
                 self.labels[info[1]]=(int(info[2]),int(info[3]))
             elif(info[0]=='P'):
