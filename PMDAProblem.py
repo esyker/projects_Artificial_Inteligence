@@ -7,17 +7,16 @@ class Doctor():
         self.efficiency=efficiency
         
     
-'''
+
 class PatientLabel():
     def __init__(self,max_wait_time,consult_time):
-        self
-        self.max_wait_time=max_wait_time
+        self.maxWaitTime=max_wait_time
         self.consult_time=consult_time
-'''
+
  
 class Patient():
     def __init__(self,_id,curr_wait_time,label,remain_consult_time):
-        self.label=label 
+        self.labelID = label 
         self._id=_id
         self.currWaitTime=curr_wait_time
         self.remainConsultTime=remain_consult_time
@@ -86,20 +85,27 @@ class PMDAProblem(Problem):
         '''
         newState=State(state.patient_list.copy())
         for patient in newState.patient_list:
-            try:
-                doc_id=action[patient._id]
-                patient.remainConsultTime=max(0,patient.remainConsultTime-self.doctor_dict[doc_id].efficiency*5)
-            except KeyError:
-                patient.currWaitTime+=5
+            if patient.remainConsultTime != 0 :
+                try:
+                    doc_id=action[patient._id]
+                    patient.remainConsultTime=max(0,patient.remainConsultTime-self.doctor_dict[doc_id].efficiency*5)
+                except KeyError:
+                    patient.currWaitTime+=5
         return newState
     
-    def goal_test(state):
+    def goal_test(self,state):
         '''
         Returns True if state s is a goal state, and False otherwise
         '''
-        pass
+        for patient in state :
+            if (patient.currWaitTime > self.labels[patient.labelID].maxWaitTime) or (patient.remainConsultTime != 0):
+                return False
+        return True
+
+
+        
     
-    def path_cost(cost,state1,action,state2):
+    def path_cost(self,cost,state1,action,state2):
         '''
         Returns the path cost of state s2, reached from state s1 by
         applying action a, knowing that the path cost of s1 is c.
@@ -120,22 +126,22 @@ class PMDAProblem(Problem):
                 #dict with keys as doc_id and doctors as values
                 self.doctor_dict[info[1]]=Doctor(info[1],float(info[2])) 
             elif(info[0]=='PL'):
-                self.labels[info[1]]=(int(info[2]),int(info[3]))
+                self.labels[int(info[1])]=PatientLabel(int(info[2]),int(info[3]))
             elif(info[0]=='P'):
                 patient_list.append(Patient(info[1],int(info[2])
-                ,self.labels[info[3]],int(self.labels[info[3]][1])))
+                ,int(info[3]),int(self.labels[info[3]][1])))
         
         self.initial=State(patient_list)
     
     
-    def search():
+    def search(self):
         '''
         Computes the solution to the problem. It should return True or False, indicating
         whether it was possible or not to find a solution
         '''
         pass
     
-    def heuristic(node):
+    def heuristic(self,node):
         '''
         returns the heuristic of node n
         '''
