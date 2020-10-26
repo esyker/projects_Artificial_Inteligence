@@ -62,13 +62,13 @@ class State():
                 return False
         return True
         
-    def __lt__(self,state):#put in front impossible nodes or with bigger path costs
+    def __lt__(self,state):#put in front possible nodes or with smaller path costs
         #if inserted Node is impossible
         if self.goal_test(self)==False:
-            return True
+            return False
         #if other Node is impossible
         elif self.goal_test(state)==False:
-            return False
+            return True
         #if both nodes are possible
         else:
             #Check which has greater cost
@@ -78,7 +78,7 @@ class State():
             state2Cost=0
             for patient in state.patient_list:
                 state2Cost+=patient.currWaitTime*patient.currWaitTime
-            return state1Cost>state2Cost#return True when new state has bigger cost than others
+            return state1Cost<state2Cost#return True when new state has smaller cost than others
            
         '''
         for i in range(len(self.patient_list)):

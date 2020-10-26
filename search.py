@@ -269,13 +269,12 @@ def best_first_graph_search(problem, f, display=False):
     frontier = PriorityQueue('min', f)
     frontier.append(node)
     explored = set()
-    #z=0
+    z=0
     while frontier:
-        '''
-        if z==30:
+        if z==15:
             return frontier
         z+=1
-        '''
+        
         node = frontier.pop()
         if problem.goal_test(node.state):
             if display:
