@@ -24,5 +24,3 @@ if __name__ == "__main__":
         frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
     print(frontier.pop().state.toString())
     
-    
-    
