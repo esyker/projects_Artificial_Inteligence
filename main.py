@@ -5,8 +5,24 @@ if __name__ == "__main__":
     problem=PMDAProblem(problem_file)
     actions=problem.actions(problem.initial)
     #for action in actions:
-        #print("Action: ",action)
-    print("Action: ",actions[0])
-    result=problem.result(problem.initial,actions[0])
-    for patient in result.patient_list:
-        print(patient.toString())
+    #    print("Action: ",action)
+    '''
+    print("Initial State:\n",problem.initial.toString())
+    results=[]
+    for action in actions:
+        print("Action: ",action)
+        result=problem.result(problem.initial,action)
+        print(result.toString())
+        results.append(result)
+     ''' 
+    
+    #for patient in result.patient_list:
+    #    print(patient.toString())
+    frontier=problem.search()
+    frontier_to_string=[]
+    for i in range(frontier.__len__()):
+        frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
+    print(frontier.pop().state.toString())
+    
+    
+    

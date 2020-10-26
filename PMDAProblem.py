@@ -1,4 +1,5 @@
 from search import Problem
+from search import uniform_cost_search
 from itertools import permutations,combinations
 
 class Doctor():
@@ -15,15 +16,19 @@ class PatientLabel():
 
  
 class Patient():
-    def __init__(self,_id,curr_wait_time,label,remain_consult_time):
+    def __init__(self,_id,curr_wait_time,label,remain_consult_time,max_wait_time):
         self.labelID = label 
         self._id=_id
         self.currWaitTime=curr_wait_time
         self.remainConsultTime=remain_consult_time
+        self.maxWaitTime=max_wait_time
     
     def toString(self):
         return ("ID:"+str(self._id)+" currWaitTime:"+str(self.currWaitTime)+
     " remainConsultTime:"+str(self.remainConsultTime))
+        
+    def copy(self):
+        return Patient(self._id,self.currWaitTime,self.labelID,self.remainConsultTime,self.maxWaitTime)
     
 
 class State():
@@ -33,7 +38,56 @@ class State():
         #[(1,15,3),(2,12,2),...] (#patient_id,curr_wait_time,#label,remain_consult_time)
         #state.numb_doctors
         #self.labels=labels #{'labelid':(max_wait_time)}
+        
     
+    def toString(self):
+        result="--State--"
+        for patient in self.patient_list:
+            result+=("\n"+patient.toString())
+        return result
+    
+    def copy(self):
+        newStateList=[]
+        for patient in self.patient_list: 
+            new_patient=patient.copy()
+            newStateList.append(new_patient)
+        return State(newStateList)
+   
+    def goal_test(self,state):
+        '''
+        Returns True if state s is a goal state, and False otherwise
+        '''
+        for patient in state.patient_list :
+            if (patient.currWaitTime > patient.maxWaitTime) or (patient.remainConsultTime != 0):
+                return False
+        return True
+        
+    def __lt__(self,state):#put in front impossible nodes or with bigger path costs
+        #if inserted Node is impossible
+        if self.goal_test(self)==False:
+            return True
+        #if other Node is impossible
+        elif self.goal_test(state)==False:
+            return False
+        #if both nodes are possible
+        else:
+            #Check which has greater cost
+            state1Cost=0
+            for patient in self.patient_list:
+                state1Cost+=patient.currWaitTime*patient.currWaitTime
+            state2Cost=0
+            for patient in state.patient_list:
+                state2Cost+=patient.currWaitTime*patient.currWaitTime
+            return state1Cost>state2Cost#return True when new state has bigger cost than others
+           
+        '''
+        for i in range(len(self.patient_list)):
+            if(self.patient_list[i].currWaitTime<state.patient_list[i].currWaitTime):
+                return True
+            elif(self.patient_list[i].currWaitTime>state.patient_list[i].currWaitTime):
+                return False
+        return False
+        '''
         
 class PMDAProblem(Problem):
     def __init__(self,file):
@@ -44,7 +98,7 @@ class PMDAProblem(Problem):
         self.load(file)
         print('Patients:')
         for patient in self.initial.patient_list:
-            print('(',patient._id,patient.currWaitTime,patient.label,patient.remainConsultTime,')')    
+            print('(',patient._id,patient.currWaitTime,patient.labelID,patient.remainConsultTime,')')    
         print('\nDoctors:')
         for doctor in self.doctor_dict:
             print('(',self.doctor_dict[doctor]._id,self.doctor_dict[doctor].efficiency,')')
@@ -83,7 +137,9 @@ class PMDAProblem(Problem):
         '''
         Returns the state resulting from applying action a to state s
         '''
-        newState=State(state.patient_list.copy())
+        newState=state.copy()
+        #newState=State(state.patient_list.copy())
+        #print(newState.toString())
         for patient in newState.patient_list:
             if patient.remainConsultTime != 0 :
                 try:
@@ -97,7 +153,7 @@ class PMDAProblem(Problem):
         '''
         Returns True if state s is a goal state, and False otherwise
         '''
-        for patient in state :
+        for patient in state.patient_list :
             if (patient.currWaitTime > self.labels[patient.labelID].maxWaitTime) or (patient.remainConsultTime != 0):
                 return False
         return True
@@ -112,7 +168,15 @@ class PMDAProblem(Problem):
         We consider the following cost associated to all the patients in the waiting room: 
             C(P) = SUM(p in P) (p_cw)=^2 where p_cw is the patient waiting time
         '''
-        pass
+        state1Cost=0
+        for patient in state1.patient_list:
+            state1Cost+=patient.currWaitTime*patient.currWaitTime
+        
+        state2Cost=0
+        for patient in state2.patient_list:
+            state2Cost+=patient.currWaitTime*patient.currWaitTime
+        
+        return state2Cost-state1Cost
     
     def load(self,file):
         '''
@@ -129,7 +193,8 @@ class PMDAProblem(Problem):
                 self.labels[int(info[1])]=PatientLabel(int(info[2]),int(info[3]))
             elif(info[0]=='P'):
                 patient_list.append(Patient(info[1],int(info[2])
-                ,int(info[3]),int(self.labels[info[3]][1])))
+                ,int(info[3]),int(self.labels[int(info[3])].consult_time),
+            self.labels[int(info[3])].maxWaitTime))
         
         self.initial=State(patient_list)
     
@@ -139,7 +204,7 @@ class PMDAProblem(Problem):
         Computes the solution to the problem. It should return True or False, indicating
         whether it was possible or not to find a solution
         '''
-        pass
+        return uniform_cost_search(self,display="True")
     
     def heuristic(self,node):
         '''
