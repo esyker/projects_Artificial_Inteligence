@@ -1,4 +1,5 @@
 from PMDAProblem import PMDAProblem
+import time
 
 if __name__ == "__main__":
     problem_file=open('problem.txt','r')
@@ -18,9 +19,15 @@ if __name__ == "__main__":
     
     #for patient in result.patient_list:
     #    print(patient.toString())
+    start = time.time()
     frontier=problem.search()
-    frontier_to_string=[]
-    for i in range(frontier.__len__()):
-        frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
-    print(frontier.pop().state.toString())
+    end = time.time()
+    totalTime=round(end-start,3)
+    print("Total Time:",totalTime,"s")
     
+    #frontier_to_string=[]
+    #for i in range(frontier.__len__()):
+    #    frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
+    #print(frontier.pop().state.toString())
+    print(frontier.state.path_cost)
+    print(frontier.state.doctor_assignment)
