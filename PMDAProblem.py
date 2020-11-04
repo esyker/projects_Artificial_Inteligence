@@ -1,7 +1,7 @@
 from search import Problem
-from search import Node
 from search import uniform_cost_search
 from itertools import permutations,combinations
+import time
 
 class Doctor():
     def __init__(self,_id,efficiency):
@@ -174,12 +174,11 @@ class PMDAProblem(Problem):
                     patient.remainConsultTime=max(0,patient.remainConsultTime-self.doctor_dict[doc_id].efficiency*5)
                 except KeyError:
                     patient.currWaitTime+=5
+            if patient.currWaitTime > self.labels[patient.labelID].maxWaitTime:#pruning
+                newState.patient_list=None
+                newState.path_cost=float('inf')
+                return newState
         newState.doctor_assignment.append(action)
-        
-        if self.goal_test2(newState)!=True:
-            newState.patient_list=None
-            newState.path_cost=float('inf')
-            return newState
         
         newState.path_cost=self.path_cost(state.path_cost,state,action,newState)
         return newState
@@ -194,13 +193,7 @@ class PMDAProblem(Problem):
             if (patient.currWaitTime > self.labels[patient.labelID].maxWaitTime) or (patient.remainConsultTime != 0):
                 return False
         return True
-    
-    def goal_test2(self,state):
-        for patient in state.patient_list :
-            if patient.currWaitTime > self.labels[patient.labelID].maxWaitTime:
-                return False
-        return True
-    
+        
     def path_cost(self,cost,state1,action,state2):
         '''
         Returns the path cost of state s2, reached from state s1 by

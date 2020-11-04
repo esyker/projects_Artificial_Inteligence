@@ -20,7 +20,7 @@ if __name__ == "__main__":
     #for patient in result.patient_list:
     #    print(patient.toString())
     start = time.time()
-    frontier=problem.search()
+    solution=problem.search()
     end = time.time()
     totalTime=round(end-start,3)
     print("Total Time:",totalTime,"s")
@@ -29,5 +29,5 @@ if __name__ == "__main__":
     #for i in range(frontier.__len__()):
     #    frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
     #print(frontier.pop().state.toString())
-    print(frontier.state.path_cost)
-    print(frontier.state.doctor_assignment)
+    print(solution.state.path_cost)
+    print(solution.state.doctor_assignment)
