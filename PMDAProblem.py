@@ -1,7 +1,9 @@
 from search import Problem
 from search import uniform_cost_search
+from search import astar_search
 from itertools import permutations,combinations
 import time
+import math
 
 class Doctor():
     def __init__(self,_id,efficiency):
@@ -139,25 +141,7 @@ class PMDAProblem(Problem):
         patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
         doctor_ids=self.doctor_dict.keys()
         _min=min(len(doctor_ids),len(patient_ids))
-        doctorsPermutations=[d for d in permutations(doctor_ids,_min)]
-        patientsCombinations=[p for p in combinations(patient_ids,_min)]
-        '''
-        #with pointers
-        _min=min(len(self.doctor_list),len(state.patient_list))
-        doctorsPermutations=[d for d in permutations(self.doctor_list,_min)]
-        patientsCombinations=[p for p in combinations(state.patient_list,_min)]
-        '''
-        possibleActions=list()
-        #_list=[d for d in doctorsPermutations]
-        #print("DOCS:",_list)
-        for docs in doctorsPermutations:
-            for patients in patientsCombinations:
-                action=dict()
-                for i in range(len(docs)):
-                    #print("Appended:(",docs[i],patients[i],")")
-                    action[patients[i]]=docs[i]
-                possibleActions.append(action)
-        #possibleActions[0][0][0]._id=-1
+        possibleActions = [dict(zip(x,doctor_ids)) for x in permutations(patient_ids,_min)]
         return possibleActions
     
     def result(self,state,action):
@@ -178,6 +162,7 @@ class PMDAProblem(Problem):
                 newState.patient_list=None
                 newState.path_cost=float('inf')
                 return newState
+            
         newState.doctor_assignment.append(action)
         
         newState.path_cost=self.path_cost(state.path_cost,state,action,newState)
@@ -236,17 +221,35 @@ class PMDAProblem(Problem):
         self.initial=State(patient_list,0,doctor_assignments)
     
     
-    def search(self):
+    def search(self,**kwargs):
         '''
         Computes the solution to the problem. It should return True or False, indicating
         whether it was possible or not to find a solution
         '''
-        return uniform_cost_search(self,display="True")
-    
-    def heuristic(self,node):
-        '''
-        returns the heuristic of node n
-        '''
-        pass
+        search_method = kwargs.get('search_method')
+        if not search_method:
+            raise ValueError("Search method is not defined")
+        if search_method=="uninformed":
+            return uniform_cost_search(self,display=True)
+        elif search_method=="informed":
+            return astar_search(self, h=heuristic, display=True)
+        else:
+            raise ValueError("Wrong search method provided")
+
+'''
+Heuristic
+'''
+
+def heuristic(node):
+    '''
+    returns the heuristic of node n
+    '''
+    if node.state.patient_list==None:
+        return float('inf')
+    heuristic=0
+    for patient in node.state.patient_list:
+        #heuristic+=patient.maxWaitTime
+        heuristic-=math.pow(patient.maxWaitTime-patient.currWaitTime,2)
+        #heuristic+=patient.remainConsultTime
+    return heuristic
         
-    
