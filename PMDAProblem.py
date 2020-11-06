@@ -68,8 +68,8 @@ class State():
         return self.path_cost<state.path_cost
     
     def __eq__(self, other):
-        if(other.patient_list == None):
-            return True
+        #if(other.patient_list == None):
+        #    return True
         for i in range(len(self.patient_list)):
             if self.patient_list[i]!=other.patient_list[i]:
                 return False
