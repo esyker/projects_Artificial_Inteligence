@@ -29,7 +29,7 @@ if __name__ == "__main__":
     #for i in range(frontier.__len__()):
     #    frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
     #print(frontier.pop().state.toString())
-    print(solution.state.path_cost)
-    print(solution.state.doctor_assignment)
-    print(solution.state.toString())
+    #print(solution.state.path_cost)
+    #print(solution.state.doctor_assignment)
+    #print(solution.state.toString())
     print("Expanded:",problem.nodes_expanded)

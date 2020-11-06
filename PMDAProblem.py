@@ -4,6 +4,7 @@ from search import astar_search
 from itertools import permutations,combinations
 import time
 import math
+import sys
 
 class Doctor():
     def __init__(self,_id,efficiency):
@@ -123,6 +124,7 @@ class PMDAProblem(Problem):
         self.initial=None
         self.nodes_expanded=0
         self.load(file)
+        self.numb_docs=len(self.doctor_dict.keys())
         print('Patients:')
         for patient in self.initial.patient_list:
             print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
@@ -136,16 +138,49 @@ class PMDAProblem(Problem):
         '''
         Returns a list (or a generator) of operators applicable to state s
         '''
+        
         if(state.patient_list==None):
             return list()
+        patients_on_limit=[]
         for patient in state.patient_list:
-            if patient.currWaitTime > self.labels[patient.labelID].maxWaitTime:#pruning
-                return list()
+            if patient.currWaitTime == self.labels[patient.labelID].maxWaitTime:#pruning
+                patients_on_limit.append(patient._id)
         #with_ids
-        patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
+        #print("ON LIMIT: ",patients_on_limit)
         doctor_ids=self.doctor_dict.keys()
-        _min=min(len(doctor_ids),len(patient_ids))
-        possibleActions = [dict(zip(x,doctor_ids)) for x in permutations(patient_ids,_min)]
+        if len(patients_on_limit)!=0:
+            if len(patients_on_limit)>self.numb_docs:
+                return list()
+            if len(patients_on_limit)==self.numb_docs:
+                patient_ids=patients_on_limit
+                _min=min(len(doctor_ids),len(patient_ids))
+                possibleActions = [dict(zip(x,doctor_ids)) for x in permutations(patient_ids,_min)]
+            else:
+                patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
+                _min=min(len(doctor_ids),len(patient_ids))
+                permuts=permutations(patient_ids,_min)
+                #print("Permuts")
+                #for p in permuts:
+                #    print(p)
+                _permuts=[]
+                for permutation in permuts:
+                    for on_limit in patients_on_limit:
+                        if on_limit not in permutation:
+                            continue
+                        _permuts.append(permutation)
+                #print("_Permuts")
+                #for p in _permuts:
+                #    print(p)
+                possibleActions = [dict(zip(x,doctor_ids)) for x in _permuts]
+                #print(possibleActions)
+                
+        else:
+             patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
+             _min=min(len(doctor_ids),len(patient_ids))
+             permuts=permutations(patient_ids,_min)
+             possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
+        #print(state.toString())
+        #print(possibleActions)
         return possibleActions
     
     def result(self,state,action):
@@ -167,7 +202,7 @@ class PMDAProblem(Problem):
                 newState.path_cost=float('inf')
                 self.nodes_expanded+=1
                 return newState
-            
+
         newState.doctor_assignment.append(action)
         
         newState.path_cost=self.path_cost(state.path_cost,state,action,newState)
