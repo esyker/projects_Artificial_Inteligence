@@ -20,7 +20,7 @@ if __name__ == "__main__":
     #for patient in result.patient_list:
     #    print(patient.toString())
     start = time.time()
-    solution=problem.search(search_method="informed")
+    solution=problem.search(search_method="uninformed")
     end = time.time()
     totalTime=round(end-start,3)
     print("Total Time:",totalTime,"s")
@@ -32,3 +32,4 @@ if __name__ == "__main__":
     print(solution.state.path_cost)
     print(solution.state.doctor_assignment)
     print(solution.state.toString())
+    print("Expanded:",problem.nodes_expanded)

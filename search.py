@@ -270,24 +270,19 @@ def best_first_graph_search(problem, f, display=False):
     frontier.append(node)
     explored = set()
     #z=0
-    numb_nodes=0
     while frontier:
         '''
         if z==30:
             return frontier
         z+=1
         '''
-        start = time.time()
         node = frontier.pop()
-        numb_nodes+=1
         #print(node.state.toString())
         if problem.goal_test(node.state):
             if display:
                 print(len(explored), "paths have been expanded and", len(frontier), "paths remain in the frontier")
-                print("Expanded ",numb_nodes," nodes")
             return node
         explored.add(node.state)
-        expand_start = time.time()
         for child in node.expand(problem):
             #return node.expand(problem)
             if child.state not in explored and child not in frontier:
@@ -296,12 +291,6 @@ def best_first_graph_search(problem, f, display=False):
                 if f(child) < frontier[child]:
                     del frontier[child]
                     frontier.append(child)
-        expand_end = time.time()
-        expand_totalTime=expand_end-expand_start
-        print("Expand:",expand_totalTime,"s")
-        end = time.time()
-        totalTime=end-start
-        print(totalTime,"s")
         #return frontier
     return None
 

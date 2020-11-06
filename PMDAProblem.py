@@ -121,6 +121,7 @@ class PMDAProblem(Problem):
         self.labels=dict()
         self.doctor_dict=dict()
         self.initial=None
+        self.nodes_expanded=0
         self.load(file)
         print('Patients:')
         for patient in self.initial.patient_list:
@@ -137,6 +138,9 @@ class PMDAProblem(Problem):
         '''
         if(state.patient_list==None):
             return list()
+        for patient in state.patient_list:
+            if patient.currWaitTime > self.labels[patient.labelID].maxWaitTime:#pruning
+                return list()
         #with_ids
         patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
         doctor_ids=self.doctor_dict.keys()
@@ -161,11 +165,13 @@ class PMDAProblem(Problem):
             if patient.currWaitTime > self.labels[patient.labelID].maxWaitTime:#pruning
                 newState.patient_list=None
                 newState.path_cost=float('inf')
+                self.nodes_expanded+=1
                 return newState
             
         newState.doctor_assignment.append(action)
         
         newState.path_cost=self.path_cost(state.path_cost,state,action,newState)
+        self.nodes_expanded+=1
         return newState
     
     def goal_test(self,state):
