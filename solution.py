@@ -286,16 +286,48 @@ class PDMAProblem(Problem):
         whether it was possible or not to find a solution
         '''
         search_method = kwargs.get('search_method')
-        if search_method=="informed":
-            self.solution=astar_search(self, h=self.heuristic)
-        else:
-            self.solution=uniform_cost_search(self)
+        #if search_method=="informed":
+        self.solution=astar_search(self, h=self.heuristic)
+        #else:
+        #    self.solution=uniform_cost_search(self)
         return self.solution!=None
     
-    def heuristic(node):
+    def heuristic(self,node):
         '''
         returns the heuristic of node n
         '''
+        if node.state.patient_list==None:
+            return float('inf')
+        heuristic=0
+        sumT = 0
+        l = 0
+        list1 = []
+        for patient in node.state.patient_list:
+            if (patient.remainConsultTime != 0) :
+                l = l + 1
+                sumT += (patient.remainConsultTime + sumT)
+        #heuristic+=patient.remainConsultTime
+        for patient in node.state.patient_list:
+            if (patient.remainConsultTime != 0) :
+                if patient.currWaitTime == self.labels[patient.labelID].maxWaitTime :
+                    list1.append(patient.remainConsultTime)
+        list1.sort()
+        list2 = [patient.remainConsultTime for patient in node.state.patient_list if patient.remainConsultTime>0]
+        list2.sort()
+        list2.reverse()
+        list1.extend(list2)
+        crl = 0
+        for i in list1:
+            while (i>0):
+                crl += (5**2)*l
+                i-=5
+            l -=1
+        heuristic = crl
+        return heuristic
+    '''
+    def heuristic(node):
+    
+        #returns the heuristic of node n
         if node.state.patient_list==None:
             return float('inf')
         heuristic=0
@@ -304,5 +336,5 @@ class PDMAProblem(Problem):
             heuristic-=math.pow(patient.maxWaitTime-patient.currWaitTime,2)
             #heuristic+=patient.remainConsultTime
         return heuristic
-
+    '''
         
