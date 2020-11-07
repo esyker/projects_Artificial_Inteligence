@@ -34,7 +34,8 @@ if __name__ == "__main__":
     end = time.time()
     totalTime=round(end-start,3)
     print("Total Time:",totalTime,"s")
-    problem.save()
+    output=open('output.txt','w')
+    problem.save(output)
     #frontier_to_string=[]
     #for i in range(frontier.__len__()):
     #    frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))

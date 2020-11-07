@@ -250,17 +250,16 @@ class PDMAProblem(Problem):
                 #dict with keys as doc_id and doctors as values
                 self.doctor_dict[info[1]]=Doctor(info[1],float(info[2])) 
             elif(info[0]=='PL'):
-                self.labels[int(info[1])]=PatientLabel(int(info[2]),int(info[3]))
+                self.labels[info[1]]=PatientLabel(int(info[2]),int(info[3]))
             elif(info[0]=='P'):
                 patient_list.append(Patient(info[1],int(info[2])
-                ,int(info[3]),int(self.labels[int(info[3])].consult_time),
-            self.labels[int(info[3])].maxWaitTime))
+                ,info[3],int(self.labels[info[3]].consult_time),
+            self.labels[info[3]].maxWaitTime))
         self.numb_docs=len(self.doctor_dict.keys())
         self.initial=State(patient_list,0,doctor_assignments)
 
         
-    def save(self):
-        f = open("output.txt", "w")
+    def save(self,f):
         #output=[['MD',code] for code in self.doctor_dict.keys()]
         if self.solution==None:
             return 
@@ -279,7 +278,6 @@ class PDMAProblem(Problem):
             for patient in output[doc]:
                 f.write(' '+patient)
             f.write('\n')
-        f.close()
                     
      
     def search(self,**kwargs):
@@ -288,10 +286,10 @@ class PDMAProblem(Problem):
         whether it was possible or not to find a solution
         '''
         search_method = kwargs.get('search_method')
-        if search_method=="uninformed":
-            self.solution=uniform_cost_search(self,display=True)
-        else: #search_method=="informed"
-            self.solution=astar_search(self, h=self.heuristic, display=True)
+        if search_method=="informed":
+            self.solution=astar_search(self, h=self.heuristic)
+        else:
+            self.solution=uniform_cost_search(self)
         return self.solution!=None
     
     def heuristic(node):
