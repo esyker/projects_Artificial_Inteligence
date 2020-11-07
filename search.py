@@ -283,6 +283,9 @@ def best_first_graph_search(problem, f, display=False):
                 print(len(explored), "paths have been expanded and", len(frontier), "paths remain in the frontier")
             return node
         explored.add(node.state)
+        #for state in explored:
+        #    print(state.patient_list)
+        #    print('\n\n\n\n')
         for child in node.expand(problem):
             #return node.expand(problem)
             if child.state not in explored and child not in frontier:

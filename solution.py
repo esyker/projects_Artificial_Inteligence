@@ -68,8 +68,8 @@ class State():
         return self.path_cost<state.path_cost
     
     def __eq__(self, other):
-        #if(other.patient_list == None):
-        #    return True
+        if(other.patient_list == None):
+            return True
         for i in range(len(self.patient_list)):
             if self.patient_list[i]!=other.patient_list[i]:
                 return False
@@ -116,7 +116,7 @@ class State():
         '''
 
         
-class PMDAProblem(Problem):
+class PDMAProblem(Problem):
     def __init__(self):
         super().__init__(None)
         self.labels=dict()
@@ -130,7 +130,8 @@ class PMDAProblem(Problem):
         '''
         Returns a list (or a generator) of operators applicable to state s
         '''
-        
+        doctor_ids=self.doctor_dict.keys()
+        '''
         if(state.patient_list==None):
             return list()
         patients_on_limit=[]
@@ -139,7 +140,6 @@ class PMDAProblem(Problem):
                 patients_on_limit.append(patient._id)
         #with_ids
         #print("ON LIMIT: ",patients_on_limit)
-        doctor_ids=self.doctor_dict.keys()
         if len(patients_on_limit)!=0:
             if len(patients_on_limit)>self.numb_docs:
                 return list()
@@ -165,12 +165,14 @@ class PMDAProblem(Problem):
                 #    print(p)
                 possibleActions = [dict(zip(x,doctor_ids)) for x in _permuts]
                 #print(possibleActions)
-                
-        else:
-             patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
-             _min=min(len(doctor_ids),len(patient_ids))
-             permuts=permutations(patient_ids,_min)
-             possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
+        '''
+        if state.patient_list==None:
+            return []
+        #else:
+        patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
+        _min=min(len(doctor_ids),len(patient_ids))
+        permuts=permutations(patient_ids,_min)
+        possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
         #print(state.toString())
         #print(possibleActions)
         return possibleActions
@@ -238,8 +240,11 @@ class PMDAProblem(Problem):
         '''
         patient_list=list()
         doctor_assignments=list()
-        
-        for line in file.readlines():
+                
+        for line in file:
+            line = line.rstrip()
+            if not line:
+                continue
             info=line.split()
             if (info[0]=='MD'):
                 #dict with keys as doc_id and doctors as values
@@ -250,13 +255,15 @@ class PMDAProblem(Problem):
                 patient_list.append(Patient(info[1],int(info[2])
                 ,int(info[3]),int(self.labels[int(info[3])].consult_time),
             self.labels[int(info[3])].maxWaitTime))
-        
         self.numb_docs=len(self.doctor_dict.keys())
         self.initial=State(patient_list,0,doctor_assignments)
-    
+
+        
     def save(self):
         f = open("output.txt", "w")
         #output=[['MD',code] for code in self.doctor_dict.keys()]
+        if self.solution==None:
+            return 
         output={code:[] for code in self.doctor_dict.keys()}
         for action in self.solution.state.doctor_assignment:
             action = {doc: patient for patient, doc in action.items()}
@@ -283,70 +290,21 @@ class PMDAProblem(Problem):
         search_method = kwargs.get('search_method')
         if search_method=="uninformed":
             self.solution=uniform_cost_search(self,display=True)
-            self.save()
         else: #search_method=="informed"
-            self.solution=astar_search(self, h=heuristic, display=True)
-            self.save()
+            self.solution=astar_search(self, h=self.heuristic, display=True)
         return self.solution!=None
     
-'''
-Heuristic
-'''
+    def heuristic(node):
+        '''
+        returns the heuristic of node n
+        '''
+        if node.state.patient_list==None:
+            return float('inf')
+        heuristic=0
+        for patient in node.state.patient_list:
+            #heuristic+=patient.maxWaitTime
+            heuristic-=math.pow(patient.maxWaitTime-patient.currWaitTime,2)
+            #heuristic+=patient.remainConsultTime
+        return heuristic
 
-def heuristic(node):
-    '''
-    returns the heuristic of node n
-    '''
-    if node.state.patient_list==None:
-        return float('inf')
-    heuristic=0
-    for patient in node.state.patient_list:
-        #heuristic+=patient.maxWaitTime
-        heuristic-=math.pow(patient.maxWaitTime-patient.currWaitTime,2)
-        #heuristic+=patient.remainConsultTime
-    return heuristic
-
-
-if __name__ == "__main__":
-    problem_file=open('problem.txt','r')
-    problem=PMDAProblem()
-    problem.load(problem_file)
-    
-    print('Patients:')
-    for patient in problem.initial.patient_list:
-        print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
-                " remainC:",patient.remainConsultTime,')')    
-    print('\nDoctors:')
-    for doctor in problem.doctor_dict:
-        print('(',problem.doctor_dict[doctor]._id,problem.doctor_dict[doctor].efficiency,')')
-    print('\n Labels:',problem.labels)
-    #actions=problem.actions(problem.initial)
-    #for action in actions:
-    #    print("Action: ",action)
-    '''
-    print("Initial State:\n",problem.initial.toString())
-    results=[]
-    for action in actions:
-        print("Action: ",action)
-        result=problem.result(problem.initial,action)
-        print(result.toString())
-        results.append(result)
-     ''' 
-    
-    #for patient in result.patient_list:
-    #    print(patient.toString())
-    start = time.time()
-    solution=problem.search(search_method="uninformed")
-    end = time.time()
-    totalTime=round(end-start,3)
-    print("Total Time:",totalTime,"s")
-    
-    #frontier_to_string=[]
-    #for i in range(frontier.__len__()):
-    #    frontier_to_string.append((frontier.heap[i],frontier.heap[i][1].state.toString()))
-    #print(frontier.pop().state.toString())
-    #print(solution.state.path_cost)
-    #print(solution.state.doctor_assignment)
-    #print(solution.state.toString())
-    print("Expanded:",problem.nodes_expanded)
         
