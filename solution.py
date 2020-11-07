@@ -117,22 +117,14 @@ class State():
 
         
 class PMDAProblem(Problem):
-    def __init__(self,file):
+    def __init__(self):
         super().__init__(None)
         self.labels=dict()
         self.doctor_dict=dict()
         self.initial=None
         self.nodes_expanded=0
-        self.load(file)
-        self.numb_docs=len(self.doctor_dict.keys())
-        print('Patients:')
-        for patient in self.initial.patient_list:
-            print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
-                    " remainC:",patient.remainConsultTime,')')    
-        print('\nDoctors:')
-        for doctor in self.doctor_dict:
-            print('(',self.doctor_dict[doctor]._id,self.doctor_dict[doctor].efficiency,')')
-        print('\n Labels:',self.labels)
+        self.numb_docs=0
+        self.solution=None
         
     def actions(self,state):
         '''
@@ -202,7 +194,7 @@ class PMDAProblem(Problem):
                 newState.path_cost=float('inf')
                 self.nodes_expanded+=1
                 return newState
-
+        
         newState.doctor_assignment.append(action)
         
         newState.path_cost=self.path_cost(state.path_cost,state,action,newState)
@@ -259,24 +251,44 @@ class PMDAProblem(Problem):
                 ,int(info[3]),int(self.labels[int(info[3])].consult_time),
             self.labels[int(info[3])].maxWaitTime))
         
+        self.numb_docs=len(self.doctor_dict.keys())
         self.initial=State(patient_list,0,doctor_assignments)
     
-    
+    def save(self):
+        f = open("output.txt", "w")
+        #output=[['MD',code] for code in self.doctor_dict.keys()]
+        output={code:[] for code in self.doctor_dict.keys()}
+        for action in self.solution.state.doctor_assignment:
+            action = {doc: patient for patient, doc in action.items()}
+            docs_assigned=set(action.keys())
+            for doc in output:
+                if doc in docs_assigned:
+                    output[doc].append(action[doc])
+                else:
+                    output[doc].append('empty')
+        for doc in output:
+            f.write('MD ')
+            f.write(doc)
+            for patient in output[doc]:
+                f.write(' '+patient)
+            f.write('\n')
+        f.close()
+                    
+     
     def search(self,**kwargs):
         '''
         Computes the solution to the problem. It should return True or False, indicating
         whether it was possible or not to find a solution
         '''
         search_method = kwargs.get('search_method')
-        if not search_method:
-            raise ValueError("Search method is not defined")
         if search_method=="uninformed":
-            return uniform_cost_search(self,display=True)
-        elif search_method=="informed":
-            return astar_search(self, h=heuristic, display=True)
-        else:
-            raise ValueError("Wrong search method provided")
-
+            self.solution=uniform_cost_search(self,display=True)
+            self.save()
+        else: #search_method=="informed"
+            self.solution=astar_search(self, h=heuristic, display=True)
+            self.save()
+        return self.solution!=None
+    
 '''
 Heuristic
 '''
@@ -297,8 +309,18 @@ def heuristic(node):
 
 if __name__ == "__main__":
     problem_file=open('problem.txt','r')
-    problem=PMDAProblem(problem_file)
-    actions=problem.actions(problem.initial)
+    problem=PMDAProblem()
+    problem.load(problem_file)
+    
+    print('Patients:')
+    for patient in problem.initial.patient_list:
+        print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
+                " remainC:",patient.remainConsultTime,')')    
+    print('\nDoctors:')
+    for doctor in problem.doctor_dict:
+        print('(',problem.doctor_dict[doctor]._id,problem.doctor_dict[doctor].efficiency,')')
+    print('\n Labels:',problem.labels)
+    #actions=problem.actions(problem.initial)
     #for action in actions:
     #    print("Action: ",action)
     '''
