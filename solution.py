@@ -293,9 +293,9 @@ class PDMAProblem(Problem):
         return self.solution!=None
     
     def heuristic(self,node):
-        '''
-        returns the heuristic of node n
-        '''
+        
+        #returns the heuristic of node n
+        
         if node.state.patient_list==None:
             return float('inf')
         heuristic=0
@@ -324,9 +324,9 @@ class PDMAProblem(Problem):
             l -=1
         heuristic = crl
         return heuristic
-    '''
-    def heuristic(node):
     
+    '''
+    def heuristic(self,node):
         #returns the heuristic of node n
         if node.state.patient_list==None:
             return float('inf')
@@ -336,5 +336,40 @@ class PDMAProblem(Problem):
             heuristic-=math.pow(patient.maxWaitTime-patient.currWaitTime,2)
             #heuristic+=patient.remainConsultTime
         return heuristic
+    '''
+    
+    '''
+    def heuristic(self,node):
+        if node.state.patient_list==None:
+            return float('inf')
+        
+        if not node.state.doctor_assignment:
+            return 0
+    '''
+    '''
+        patient_list=sorted(node.state.patient_list,key=lambda patient:patient.currWaitTime)
+        patient_list=list(filter(lambda pat:pat.remainConsultTime>0,patient_list))
+        
+        doctor_ids=self.doctor_dict.keys()
+        _min=min(len(doctor_ids),len(patient_list))
+    '''
+    '''
+        h=0
+        for patient in node.state.patient_list[-_min:]:
+            h+=(patient.currWaitTime)**2
+    '''
+        #attended=set(node.state.doctor_assignment[-1].keys())
+        #attended=set([patient._id for patient in patient_list[-_min:]])
+    '''  
+        h=0
+        for patient in node.state.patient_list:
+            #if patient._id not in attended:
+                h+=patient.maxWaitTime-patient.currWaitTime
+                #h+=(patient.currWaitTime+5)**2
+            #else:
+            #    h+=(patient.currWaitTime)**2
+        
+        #print("Path_Cost",node.state.path_cost,"H:",h)
+        return h
     '''
         
