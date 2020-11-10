@@ -37,6 +37,7 @@ class Patient():
     def __eq__(self,other):
         if(self.currWaitTime==other.currWaitTime and self.remainConsultTime==other.remainConsultTime):
             return True
+        return False
     
 
 class State():
@@ -292,6 +293,7 @@ class PDMAProblem(Problem):
         #    self.solution=uniform_cost_search(self)
         return self.solution!=None
     
+    '''
     def heuristic(self,node):
         
         #returns the heuristic of node n
@@ -324,7 +326,7 @@ class PDMAProblem(Problem):
             l -=1
         heuristic = crl
         return heuristic
-    
+    '''
     '''
     def heuristic(self,node):
         #returns the heuristic of node n
@@ -372,4 +374,87 @@ class PDMAProblem(Problem):
         #print("Path_Cost",node.state.path_cost,"H:",h)
         return h
     '''
+    '''
+    def heuristic(self,node):
+        if not node.state.patient_list:
+            return float('inf')
+        totalWaitTime=0
+        count=0
+        for patient in node.state.patient_list:
+            count+=1
+            totalWaitTime+=patient.currWaitTime
+        mean=totalWaitTime/count
+        standard_deviation=0
+        for patient in node.state.patient_list:
+            standard_deviation+=(patient.currWaitTime-mean)**2
+        standard_deviation=math.sqrt(standard_deviation/count)
+        h=standard_deviation**2
+        #print("Path_Cost",node.state.path_cost,"H:",h)
+        return h
+     '''
+    '''
+    def heuristic(self,node):
+        if not node.state.patient_list:
+            return float('inf')
+        on_limit=[]
+        max_wait_time=[]
+        for patient in node.state.patient_list:
+             if(patient.remainConsultTime>0):
+                 if patient.currWaitTime==patient.maxWaitTime:
+                     on_limit.append(patient)
+                 else:
+                     max_wait_time.append(patient)
+        to_attend=[]
+        if len(on_limit)>self.numb_docs:
+            return float('inf')
+        elif len(on_limit)==self.numb_docs:
+            to_attend=on_limit
+        else:
+            max_wait_time.sort(key=lambda x:x.currWaitTime,reverse=True)
+            to_attend=on_limit+max_wait_time[0:(self.numb_docs-len(on_limit))]
+
+        h=0
+        for patient in node.state.patient_list:
+                attended=False
+                for p in to_attend:  
+                    if(patient._id==p._id):
+                        h+=patient.currWaitTime**2
+                        attended=True
+                        break
+                if not attended:
+                    h+=(patient.currWaitTime+5)**2
         
+        #h=node.state.path_cost-h
+        return h
+        '''
+
+    def heuristic(self,node):
+        if not node.state.patient_list:
+            return float('inf')
+        docs=list(self.doctor_dict.values())
+        docs.sort(key=lambda x:x.efficiency)
+        newState=node.state.copy()
+        while 1:
+            #print(newState.toString())
+            done=True
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                    done=False
+                    break
+            if done:
+                break
+            newState.patient_list.sort(key=lambda x:x.currWaitTime,reverse=True)
+            docs_free=self.numb_docs
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                    if docs_free>0:
+                            patient.remainConsultTime=max(0,patient.remainConsultTime-5*docs[docs_free-1].efficiency);
+                            docs_free-=1
+                    if docs_free==0:
+                            patient.currWaitTime+=5
+            
+        goal_cost=self.path_cost(None,None,None,newState)
+        h=goal_cost-node.state.path_cost
+        return h           
+                
+       
