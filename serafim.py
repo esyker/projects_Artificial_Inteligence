@@ -28,8 +28,8 @@ class Patient():
         self.maxWaitTime=max_wait_time
     
     def toString(self):
-        return ("ID:"+str(self._id)+" currWaitTime:"+str(self.currWaitTime)+
-    " remainConsultTime:"+str(self.remainConsultTime))
+        return ("ID:"+self._id+" currWaitTime:"+str(self.currWaitTime)+
+    " label:"+self.labelID)
         
     def copy(self):
         return Patient(self._id,self.currWaitTime,self.labelID,self.remainConsultTime,self.maxWaitTime)
@@ -261,68 +261,48 @@ class PDMAProblem(Problem):
 
         
     def save(self,f):
-        #output=[['MD',code] for code in self.doctor_dict.keys()]
-        if self.solution==None:
-            return 
-        output={code:[] for code in self.doctor_dict.keys()}
-        for action in self.solution.state.doctor_assignment:
-            action = {doc: patient for patient, doc in action.items()}
-            docs_assigned=set(action.keys())
-            for doc in output:
-                if doc in docs_assigned:
-                    output[doc].append(action[doc])
-                else:
-                    output[doc].append('empty')
-        for doc in output:
-            f.write('MD ')
-            f.write(doc)
-            for patient in output[doc]:
-                f.write(' '+patient)
-            f.write('\n')
-                    
+        i=0
+        f.write('MD ')
+        for doctor in self.doctor_dict:
+            f.write('DOC ')
+            d=self.doctor_dict[doctor]._id+' '+str(self.doctor_dict[doctor].efficiency)+' '
+            f.write(d)
+        f.write('\n')
+        f.write('MD')
+        for label in self.labels.keys():
+            f.write(' LAB ')
+            f.write(label)
+            f.write(' ')
+            f.write(str(self.labels[label].maxWaitTime))
+            f.write(' ')
+            f.write(str(self.labels[label].consult_time))
+        f.write('\n')
+        f.write('MD ')
+        for patient in self.initial.patient_list:
+            f.write('Patient')
+            f.write(patient.toString()) 
+            print(patient.toString())
+            i+=1
+            if i==self.numb_docs:
+                break
+        f.write('\n')
+        '''
+        for patient in problem.initial.patient_list:
+            print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
+                    " remainC:",patient.remainConsultTime,')')    
+        print('\nDoctors:')
+        for doctor in problem.doctor_dict:
+            print('(',problem.doctor_dict[doctor]._id,problem.doctor_dict[doctor].efficiency,')')
+        print('\n Labels:',problem.labels)
+        '''
+        
      
     def search(self,**kwargs):
-        '''
-        Computes the solution to the problem. It should return True or False, indicating
-        whether it was possible or not to find a solution
-        '''
-        search_method = kwargs.get('search_method')
-        #if search_method=="informed":
-        self.solution=astar_search(self, h=self.heuristic)
-        #else:
-        #    self.solution=uniform_cost_search(self)
-        return self.solution!=None
+        return True
     
     
     def heuristic(self,node):
-        if not node.state.patient_list:
-            return float('inf')
-        docs=list(self.doctor_dict.values())
-        docs.sort(key=lambda x:x.efficiency)
-        newState=node.state.copy()
-        while 1:
-            #print(newState.toString())
-            done=True
-            for patient in newState.patient_list:
-                if patient.remainConsultTime>0:
-                    done=False
-                    break
-            if done:
-                break
-            newState.patient_list.sort(key=lambda x:x.currWaitTime,reverse=True)
-            docs_free=self.numb_docs
-            for patient in newState.patient_list:
-                if patient.remainConsultTime>0:
-                    if docs_free>0:
-                            patient.remainConsultTime=max(0,patient.remainConsultTime-5*docs[docs_free-1].efficiency);
-                            docs_free-=1
-                    elif docs_free==0:
-                            patient.currWaitTime+=5
-            
-        goal_cost=self.path_cost(None,None,None,newState)
-        h=goal_cost-node.state.path_cost
-        #print(h)
-        return h         
+        return 0       
     
         
                 

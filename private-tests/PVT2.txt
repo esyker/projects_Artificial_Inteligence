@@ -1,0 +1,10 @@
+MD Joao 0.5
+MD Daniel 1.0 
+MD Pedro 0.5
+
+PL urg 10 15 
+PL mid 20 10
+
+P Carlos 0 urg
+P Jose 15 mid
+P Carlos 0 urg
