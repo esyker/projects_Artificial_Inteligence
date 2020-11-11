@@ -298,7 +298,7 @@ class PDMAProblem(Problem):
         if not node.state.patient_list:
             return float('inf')
         docs=list(self.doctor_dict.values())
-        docs.sort(key=lambda x:x.efficiency)
+        docs.sort(key=lambda x:x.efficiency,reverse=True)
         newState=node.state.copy()
         while 1:
             #print(newState.toString())
@@ -310,13 +310,23 @@ class PDMAProblem(Problem):
             if done:
                 break
             newState.patient_list.sort(key=lambda x:x.currWaitTime,reverse=True)
-            docs_free=self.numb_docs
+            attended_count=0
+            attend_patient_id=set()
+            attend=list()
             for patient in newState.patient_list:
                 if patient.remainConsultTime>0:
-                    if docs_free>0:
-                            patient.remainConsultTime=max(0,patient.remainConsultTime-5*docs[docs_free-1].efficiency);
-                            docs_free-=1
-                    elif docs_free==0:
+                    attend.append(patient)
+                    attend_patient_id.add(patient._id)
+                    attended_count+=1
+                    if attended_count==self.numb_docs:
+                        break
+            attend.sort(key=lambda x:x.remainConsultTime,reverse=True)
+            #print(attend_patient_id)
+            for i in range(len(attend)):
+                attend[i].remainConsultTime=max(0,attend[i].remainConsultTime-docs[i].efficiency*5)
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                        if patient._id not in attend_patient_id:    
                             patient.currWaitTime+=5
             
         goal_cost=self.path_cost(None,None,None,newState)

@@ -3,7 +3,8 @@ import time
 
 if __name__ == "__main__":
     #problem_file=open('problem.txt','r')
-    problem_file=open('./public-tests/PUB3.txt','r')
+    #problem_file=open('./public-tests/PUB3.txt','r')
+    problem_file=open('./private-tests/PVT5.txt','r')
     problem=PDMAProblem()
     problem.load(problem_file)
     
