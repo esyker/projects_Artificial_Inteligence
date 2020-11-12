@@ -241,7 +241,8 @@ class PDMAProblem(Problem):
         '''
         patient_list=list()
         doctor_assignments=list()
-                
+        self.inputfile = file
+        return 
         for line in file:
             line = line.rstrip()
             if not line:
@@ -261,41 +262,12 @@ class PDMAProblem(Problem):
 
         
     def save(self,f):
-        i=0
+       
         f.write('MD ')
-        for doctor in self.doctor_dict:
-            f.write('DOC ')
-            d=self.doctor_dict[doctor]._id+' '+str(self.doctor_dict[doctor].efficiency)+' '
-            f.write(d)
-        f.write('\n')
-        f.write('MD')
-        for label in self.labels.keys():
-            f.write(' LAB ')
-            f.write(label)
-            f.write(' ')
-            f.write(str(self.labels[label].maxWaitTime))
-            f.write(' ')
-            f.write(str(self.labels[label].consult_time))
-        f.write('\n')
-        f.write('MD ')
-        for patient in self.initial.patient_list:
-            f.write('Patient')
-            f.write(patient.toString()) 
-            print(patient.toString())
-            i+=1
-            if i==self.numb_docs:
-                break
-        f.write('\n')
-        '''
-        for patient in problem.initial.patient_list:
-            print('(',patient._id," currW:",patient.currWaitTime," maxW:",patient.maxWaitTime,
-                    " remainC:",patient.remainConsultTime,')')    
-        print('\nDoctors:')
-        for doctor in problem.doctor_dict:
-            print('(',problem.doctor_dict[doctor]._id,problem.doctor_dict[doctor].efficiency,')')
-        print('\n Labels:',problem.labels)
-        '''
-        
+        for line in self.inputfile:
+             
+             f.write(line.rstrip())
+             f.write('  newline  ')
      
     def search(self,**kwargs):
         return True
@@ -304,6 +276,3 @@ class PDMAProblem(Problem):
     def heuristic(self,node):
         return 0       
     
-        
-                
-       

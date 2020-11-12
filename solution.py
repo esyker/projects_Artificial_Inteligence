@@ -69,7 +69,7 @@ class State():
         return self.path_cost<state.path_cost
     
     def __eq__(self, other):
-        if(other.patient_list == None):
+        if(other.patient_list == None or self.patient_list==None):
             return True
         for i in range(len(self.patient_list)):
             if self.patient_list[i]!=other.patient_list[i]:
@@ -208,11 +208,13 @@ class PDMAProblem(Problem):
         '''
         Returns True if state s is a goal state, and False otherwise
         '''
+        #print(state.toString())
         if state.patient_list==None:
             return False
         for patient in state.patient_list :
             if (patient.currWaitTime > self.labels[patient.labelID].maxWaitTime) or (patient.remainConsultTime != 0):
                 return False
+        print('True')
         return True
         
     def path_cost(self,cost,state1,action,state2):
@@ -286,6 +288,18 @@ class PDMAProblem(Problem):
         Computes the solution to the problem. It should return True or False, indicating
         whether it was possible or not to find a solution
         '''
+        #See if problem is solvable
+        #Check maximum maxWaitTime
+        
+        maxWaitTime=-1
+        for patient in self.initial.patient_list:
+            if patient.maxWaitTime>maxWaitTime:
+                maxWaitTime=patient.maxWaitTime
+        numb_cycles=maxWaitTime/5
+        if (len(self.initial.patient_list)-self.numb_docs*numb_cycles)>0:
+            #print("HHHHHHH")
+            return False
+        
         search_method = kwargs.get('search_method')
         #if search_method=="informed":
         self.solution=astar_search(self, h=self.heuristic)
