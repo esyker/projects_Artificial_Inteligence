@@ -1,0 +1,26 @@
+Question1
+Describe the state representation and the operators.
+
+Each state is represented as a list of patients. Each state has different remain waiting times for the patients and different remain Consult Times.
+
+
+Question 2
+Identify the method used for the search algorithm. Justify the choice.
+
+The used method is A*, which is better than blind or uninformed search, since it substantially reduces the branching factor and search time.
+Adittionaly if we guarantee that the heuristic function sactisfies a set of properties the search remains complete and optimal. 
+
+Question 3
+Does the chosen algorithm guarantee the optimal solution? Justify.
+
+Let h*(N) be the cost of the optimal path from N to a goal node.
+The heuristic function h(N) is admissible if: 0 < h(N) < h*(N)
+An admissible heuristic function is always optimistic !
+A* is complete and optimal
+[This result holds if nodes revisiting states are not discarded]
+
+Question 4
+Determine the number of generated nodes, the depth of the solution, and the effective branching factor, 
+for each one of the example files provided at the course webpage.
+
+The effective branching factor b* is defined by n = 1 + b* + (b*)2 +...+ (b*)d.

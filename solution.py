@@ -41,10 +41,11 @@ class Patient():
     
 
 class State():
-    def __init__(self,patient_list,pathCost,docAssignment):
+    def __init__(self,patient_list,pathCost,docAssignment,depth):
         self.patient_list=patient_list
         self.path_cost=pathCost
         self.doctor_assignment=docAssignment
+        self.depth=depth
         #[(1,15,30,15),(2,12,40,20),...] (#patient_id,curr_wait_time,max_wait_time,remain_consult_time) 
         #[(1,15,3),(2,12,2),...] (#patient_id,curr_wait_time,#label,remain_consult_time)
         #state.numb_doctors
@@ -63,7 +64,7 @@ class State():
             new_patient=patient.copy()
             newStateList.append(new_patient)
         doctor_list=self.doctor_assignment.copy()
-        return State(newStateList,self.path_cost,doctor_list)
+        return State(newStateList,self.path_cost,doctor_list,self.depth)
    
     def __lt__(self,state):
         return self.path_cost<state.path_cost
@@ -185,6 +186,7 @@ class PDMAProblem(Problem):
         newState=state.copy()
         #newState=State(state.patient_list.copy())
         #print(newState.toString())
+        newState.depth+=1
         for patient in newState.patient_list:
             if patient.remainConsultTime != 0 :
                 try:
@@ -259,7 +261,9 @@ class PDMAProblem(Problem):
                 ,info[3],int(self.labels[info[3]].consult_time),
             self.labels[info[3]].maxWaitTime))
         self.numb_docs=len(self.doctor_dict.keys())
-        self.initial=State(patient_list,0,doctor_assignments)
+        self.initial=State(patient_list,0,doctor_assignments,0)
+        
+        self.nodes_expanded+=1
 
         
     def save(self,f):
@@ -301,10 +305,10 @@ class PDMAProblem(Problem):
             return False
         
         search_method = kwargs.get('search_method')
-        #if search_method=="informed":
-        self.solution=astar_search(self, h=self.heuristic)
-        #else:
-        #    self.solution=uniform_cost_search(self)
+        if search_method=="uninformed":
+            self.solution=uniform_cost_search(self)
+        else:
+            self.solution=astar_search(self, h=self.heuristic)
         return self.solution!=None
     
     

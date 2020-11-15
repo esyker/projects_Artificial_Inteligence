@@ -2,9 +2,9 @@ from solution import PDMAProblem
 import time
 
 if __name__ == "__main__":
-    #problem_file=open('problem.txt','r')
+    problem_file=open('problem.txt','r')
     #problem_file=open('./public-tests/PUB3.txt','r')
-    problem_file=open('./private-tests/PVT5.txt','r')
+    #problem_file=open('./private-tests/PVT5.txt','r')
     problem=PDMAProblem()
     problem.load(problem_file)
     
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #for patient in result.patient_list:
     #    print(patient.toString())
     start = time.time()
-    solution=problem.search(search_method="uninformed")
+    solution=problem.search()#search_method="uninformed"
     end = time.time()
     totalTime=round(end-start,3)
     print("Total Time:",totalTime,"s")
@@ -47,5 +47,6 @@ if __name__ == "__main__":
     #print(solution.state.toString())
     print("Expanded:",problem.nodes_expanded)
     print(problem.solution.state.doctor_assignment)
-    print("Path Cost:",problem.solution.state.path_cost)
+    print("Solution Path Cost:",problem.solution.state.path_cost)
+    print("Solution Depth:",problem.solution.depth)
     
