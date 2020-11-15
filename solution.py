@@ -133,50 +133,59 @@ class PDMAProblem(Problem):
         Returns a list (or a generator) of operators applicable to state s
         '''
         doctor_ids=self.doctor_dict.keys()
-        '''
+        
         if(state.patient_list==None):
-            return list()
-        patients_on_limit=[]
+            return []
+        patients_on_limit=list()
+        patients_not_on_limit=list()
+        patient_ids=list()
+
         for patient in state.patient_list:
-            if patient.currWaitTime == self.labels[patient.labelID].maxWaitTime:#pruning
-                patients_on_limit.append(patient._id)
-        #with_ids
-        #print("ON LIMIT: ",patients_on_limit)
+            if patient.remainConsultTime>0:
+                patient_ids.append(patient._id)
+                if patient.currWaitTime == self.labels[patient.labelID].maxWaitTime:#pruning
+                    patients_on_limit.append(patient._id)
+                else:
+                    patients_not_on_limit.append(patient._id)
+
+        _min=min(len(doctor_ids),len(patient_ids))
+        '''
+            elif len(patients_on_limit)==self.numb_docs:
+                #mandatory to choose all the patients_on_limit
+                permuts=permutations(list(patients_on_limit),_min)
+            '''
+            
+        asd=False
         if len(patients_on_limit)!=0:
             if len(patients_on_limit)>self.numb_docs:
-                return list()
-            if len(patients_on_limit)==self.numb_docs:
-                patient_ids=patients_on_limit
-                _min=min(len(doctor_ids),len(patient_ids))
-                possibleActions = [dict(zip(x,doctor_ids)) for x in permutations(patient_ids,_min)]
+                #impossible to solve
+                return []
+
             else:
-                patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
-                _min=min(len(doctor_ids),len(patient_ids))
-                permuts=permutations(patient_ids,_min)
-                #print("Permuts")
-                #for p in permuts:
-                #    print(p)
-                _permuts=[]
-                for permutation in permuts:
-                    for on_limit in patients_on_limit:
-                        if on_limit not in permutation:
-                            continue
-                        _permuts.append(permutation)
-                #print("_Permuts")
-                #for p in _permuts:
-                #    print(p)
-                possibleActions = [dict(zip(x,doctor_ids)) for x in _permuts]
-                #print(possibleActions)
-        '''
-        if state.patient_list==None:
-            return []
-        #else:
-        patient_ids=[patient._id for patient in state.patient_list if patient.remainConsultTime>0]
-        _min=min(len(doctor_ids),len(patient_ids))
-        permuts=permutations(patient_ids,_min)
+                #permuts=permutations(patient_ids,_min)
+                asd=True
+                _permuts=permutations(patient_ids,_min)
+                permuts=[]
+                for p in _permuts:
+                    correct=True
+                    for patient in patients_on_limit:
+                        if patient not in p:
+                            correct=False
+                            break
+                    if correct:
+                        permuts.append(p)
+                             
+        else:
+            permuts=permutations(patient_ids,_min)
+        
         possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
-        #print(state.toString())
-        #print(possibleActions)
+        '''
+        if asd:
+            print("On limit:",patients_on_limit)
+            print(possibleActions)
+            sys.stdout.flush()
+            sys.exit()
+        '''
         return possibleActions
     
     def result(self,state,action):
