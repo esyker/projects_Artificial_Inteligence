@@ -68,21 +68,6 @@ class State():
    
     def __lt__(self,state):
         return self.path_cost<state.path_cost
-    
-    def __eq__(self, other):
-        if(other.patient_list == None or self.patient_list==None):
-            return True
-        for i in range(len(self.patient_list)):
-            if self.patient_list[i]!=other.patient_list[i]:
-                return False
-        return True
-    
-    def __hash__(self):
-        # We use the hash value of the state
-        # stored in the node instead of the node
-        # object itself to quickly search a node
-        # with the same state in a Hash Table
-        return hash(self.path_cost)
 
         
 class PDMAProblem(Problem):
@@ -117,7 +102,6 @@ class PDMAProblem(Problem):
 
         _min=min(len(doctor_ids),len(patient_ids))
             
-        asd=False
         if len(patients_on_limit)!=0:
             if len(patients_on_limit)>self.numb_docs:
                 #impossible to solve
@@ -127,7 +111,6 @@ class PDMAProblem(Problem):
                 permuts=permutations(list(patients_on_limit),_min)
             else:
                 #permuts=permutations(patient_ids,_min)
-                asd=True
                 _permuts=permutations(patient_ids,_min)
                 permuts=[]
                 for p in _permuts:
@@ -143,13 +126,6 @@ class PDMAProblem(Problem):
             permuts=permutations(patient_ids,_min)
         
         possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
-        '''
-        if asd:
-            print("On limit:",patients_on_limit)
-            print(possibleActions)
-            sys.stdout.flush()
-            sys.exit()
-        '''
         return possibleActions
     
     def result(self,state,action):
@@ -284,6 +260,8 @@ class PDMAProblem(Problem):
             self.solution=astar_search(self, h=self.heuristic)
         return self.solution!=None
     
+    
+    
     def heuristic(self,node):
         if not node.state.patient_list:
             return float('inf')
@@ -322,7 +300,7 @@ class PDMAProblem(Problem):
         h=goal_cost-node.state.path_cost
         #print(h)
         return h
-    
+        
     '''
     def heuristic(self,node):
         if not node.state.patient_list:
@@ -337,7 +315,7 @@ class PDMAProblem(Problem):
                     break
             if done:
                 break
-            newState.patient_list.sort(key=lambda x:x.currWaitTime/(x.remainConsultTime+1),reverse=True)
+            newState.patient_list.sort(key=lambda x:x.currWaitTime,reverse=True)
             attended_count=0
             attend_patient_id=set()
             attend=list()
