@@ -45,7 +45,12 @@ class State():
         self.patient_list=patient_list
         self.path_cost=pathCost
         self.doctor_assignment=docAssignment
-        self.depth=depth        
+        self.depth=depth
+        #[(1,15,30,15),(2,12,40,20),...] (#patient_id,curr_wait_time,max_wait_time,remain_consult_time) 
+        #[(1,15,3),(2,12,2),...] (#patient_id,curr_wait_time,#label,remain_consult_time)
+        #state.numb_doctors
+        #self.labels=labels #{'labelid':(max_wait_time)}
+        
     
     def toString(self):
         result="--State--"
@@ -73,6 +78,10 @@ class State():
         return True
     
     def __hash__(self):
+        # We use the hash value of the state
+        # stored in the node instead of the node
+        # object itself to quickly search a node
+        # with the same state in a Hash Table
         return hash(self.path_cost)
 
         
@@ -108,6 +117,7 @@ class PDMAProblem(Problem):
 
         _min=min(len(doctor_ids),len(patient_ids))
             
+        asd=False
         if len(patients_on_limit)!=0:
             if len(patients_on_limit)>self.numb_docs:
                 #impossible to solve
@@ -117,6 +127,7 @@ class PDMAProblem(Problem):
                 permuts=permutations(list(patients_on_limit),_min)
             else:
                 #permuts=permutations(patient_ids,_min)
+                asd=True
                 _permuts=permutations(patient_ids,_min)
                 permuts=[]
                 for p in _permuts:
@@ -132,6 +143,13 @@ class PDMAProblem(Problem):
             permuts=permutations(patient_ids,_min)
         
         possibleActions = [dict(zip(x,doctor_ids)) for x in permuts]
+        '''
+        if asd:
+            print("On limit:",patients_on_limit)
+            print(possibleActions)
+            sys.stdout.flush()
+            sys.exit()
+        '''
         return possibleActions
     
     def result(self,state,action):
@@ -139,6 +157,8 @@ class PDMAProblem(Problem):
         Returns the state resulting from applying action a to state s
         '''
         newState=state.copy()
+        #newState=State(state.patient_list.copy())
+        #print(newState.toString())
         newState.depth+=1
         for patient in newState.patient_list:
             if patient.remainConsultTime != 0 :
@@ -163,6 +183,7 @@ class PDMAProblem(Problem):
         '''
         Returns True if state s is a goal state, and False otherwise
         '''
+        #print(state.toString())
         if state.patient_list==None:
             return False
         for patient in state.patient_list :
@@ -219,6 +240,7 @@ class PDMAProblem(Problem):
 
         
     def save(self,f):
+        #output=[['MD',code] for code in self.doctor_dict.keys()]
         if self.solution==None:
             return 
         output={code:[] for code in self.doctor_dict.keys()}
@@ -245,12 +267,14 @@ class PDMAProblem(Problem):
         '''
         #See if problem is solvable
         #Check maximum maxWaitTime
+        
         maxWaitTime=-1
         for patient in self.initial.patient_list:
             if patient.maxWaitTime>maxWaitTime:
                 maxWaitTime=patient.maxWaitTime
         numb_cycles=maxWaitTime/5
         if (len(self.initial.patient_list)-self.numb_docs*numb_cycles)>0:
+            #print("HHHHHHH")
             return False
         
         search_method = kwargs.get('search_method')
@@ -260,6 +284,7 @@ class PDMAProblem(Problem):
             self.solution=astar_search(self, h=self.heuristic)
         return self.solution!=None
     
+    '''
     def heuristic(self,node):
         if not node.state.patient_list:
             return float('inf')
@@ -267,6 +292,7 @@ class PDMAProblem(Problem):
         docs.sort(key=lambda x:x.efficiency,reverse=True)
         newState=node.state.copy()
         while 1:
+            #print(newState.toString())
             done=True
             for patient in newState.patient_list:
                 if patient.remainConsultTime>0:
@@ -274,27 +300,71 @@ class PDMAProblem(Problem):
                     break
             if done:
                 break
-            newState.patient_list.sort(key=lambda x:x.currWaitTime)
+            newState.patient_list.sort(key=lambda x:x.currWaitTime)#key=lambda x:(x.currWaitTime+x.remainConsultTime)**2)
             attended_count=0
             attend_patient_id=set()
+            attend=list()
             for patient in newState.patient_list:
                 if patient.remainConsultTime>0:
+                    attend.append(patient)
                     attend_patient_id.add(patient._id)
                     attended_count+=1
                     if attended_count==self.numb_docs:
                         break
-
+            #print(attend_patient_id)
+            for patient in attend:
+                patient.remainConsultTime=0#max(0,patient.remainConsultTime-5)
             for patient in newState.patient_list:
                 if patient.remainConsultTime>0:
                         if patient._id not in attend_patient_id:    
                             patient.currWaitTime+=5
-                        else:
-                            patient.remainConsultTime=0
             
         goal_cost=self.path_cost(None,None,None,newState)
         h=goal_cost-node.state.path_cost
+        #print(h)
         return h
-    
+    '''
+    '''
+    def heuristic(self,node):
+        if not node.state.patient_list:
+            return float('inf')
+        docs=list(self.doctor_dict.values())
+        docs.sort(key=lambda x:x.efficiency,reverse=True)
+        newState=node.state.copy()
+        while 1:
+            #print(newState.toString())
+            done=True
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                    done=False
+                    break
+            if done:
+                break
+            newState.patient_list.sort(key=lambda x:x.currWaitTime,reverse=True)
+            attended_count=0
+            attend_patient_id=set()
+            attend=list()
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                    attend.append(patient)
+                    attend_patient_id.add(patient._id)
+                    attended_count+=1
+                    if attended_count==self.numb_docs:
+                        break
+            attend.sort(key=lambda x:x.remainConsultTime,reverse=True)
+            #print(attend_patient_id)
+            for i in range(len(attend)):
+                attend[i].remainConsultTime=max(0,attend[i].remainConsultTime-docs[i].efficiency*5)
+            for patient in newState.patient_list:
+                if patient.remainConsultTime>0:
+                        if patient._id not in attend_patient_id:    
+                            patient.currWaitTime+=5
+            
+        goal_cost=self.path_cost(None,None,None,newState)
+        h=goal_cost-node.state.path_cost
+        #print(h)
+        return h         
+    '''
 
         
                 
