@@ -1,10 +1,7 @@
 from search import Problem
 from search import uniform_cost_search
 from search import astar_search
-from itertools import permutations,combinations
-import time
-import math
-import sys
+from itertools import permutations
 
 class Doctor():
     def __init__(self,_id,efficiency):
