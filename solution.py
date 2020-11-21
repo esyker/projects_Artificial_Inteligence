@@ -175,11 +175,6 @@ class PDMAProblem(Problem):
         We consider the following cost associated to all the patients in the waiting room: 
             C(P) = SUM(p in P) (p_cw)=^2 where p_cw is the patient waiting time
         '''
-        '''
-        state1Cost=0
-        for patient in state1.patient_list:
-            state1Cost+=patient.currWaitTime*patient.currWaitTime
-        '''
         if state2.patient_list==None:
             return float('inf')
         state2Cost=0

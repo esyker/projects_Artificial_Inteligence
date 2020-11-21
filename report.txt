@@ -4,7 +4,7 @@ Describe the state representation and the operators.
 Each state is represented as a list of patients with a certain current waiting time, remaining 
 consult time and maximum waiting time. 
 
-Our operator is attributing a doctor to a patient ("attending" the patient).
+The operator is attributing a doctor to a patient on a certain time slot("attending" the patient).
 
 
 Question 2
@@ -12,13 +12,13 @@ Identify the method used for the search algorithm. Justify the choice.
 
 The used method is A*, which is better than blind or uninformed search, since it substantially reduces 
 the branching factor and search time, while remaining optimal and complete in a tree-search
-if the heuristic satisfies some properties, which we guarantee.
+if the heuristic satisfies some properties.
  
 Question 3
 Does the chosen algorithm guarantee the optimal solution? Justify.
 
-If h(n) is admissible, the solution returned by A* in a tree-search is optimal.
-The heuristic function h(N) of node N is admissible if: 0 < h(N) < h*(N),  for all N where h*(N) 
+If h(n) is admissible, the solution returned by A* is optimal.
+The heuristic function h(N) of node N is admissible if: 0 < h(N) < h*(N),  for all N, where h*(N) 
 is the true cost from node N to the solution.
 
 In the heuristic calculations we simulate the goal node cost without overstimating it, this is, 
@@ -33,20 +33,23 @@ The patients that are not attended have the current waiting time increased by 5,
 Putting this into a formula:
     h(N)=path_cost(SimulationGoalNode)-path_cost(N)
 
-Therefore if there is no solution, path_cost(simulationGoalNode)<path_cost(GoalNode), as it is 
-not considered in our simulation that the maximum waiting time is ever surpassed.
+If there is no solution, path_cost(simulationGoalNode)<path_cost(GoalNode), as it is 
+not considered in our simulation that the maximum waiting time is ever surpassed, so the 
+simulationGoalNode heuristic will never be infinity, even if there is no solution.
 
 If there is a solution, h(N)<h*(N), since the patients with the biggest current waiting time are 
-attended first and in one slot. The relaxation of attending the patients in one slot, regardless of their
+attended first and in just one slot. 
+The relaxation of attending the patients in one slot, regardless of their
 remainig consultation time guarantees that we do not incur in the problem of while attending the patient 
 with a bigger current waiting time, increasing the current waiting time of another client by an amount
 that would not compensate.
 This is, in a optimal solution there is the possibility of 
 not always the  patient with the biggest waiting time being the one attended since if a client 
 with a smaller waiting time and a smaller remaining consultation time will reach 0 consultation time faster 
-and  stop increasing his current waiting time. With this relaxation we do not incur in this problem.
+and  stop increasing his current waiting time. With this relaxation we do not incur in the problem of
+overstimating the path cost of the goal node in this situation.
 
-Also by attending the patients with the biggest current waiting time first, we guarantte that the
+Also by attending the patients with the biggest current waiting time first, we guarantee that the
 squared sum of the waiting times will be least possible, this is the path_cost will be the least possible.
 
 Therefore path_cost(SimulationGoalNode)<path_cost(GoalNode) and:
