@@ -1,4 +1,5 @@
-import probability
+from probability import BayesNet
+from probability import elimination_ask
 
 class Disease :
     def __init__ (self,name):
@@ -38,6 +39,7 @@ class Result:
  
 class MDProblem :
     def __init__ (self,fh):
+        self.BayesNet=BayesNet()
         # Place here your code to load problem from opened file object fh
         # and use probability . BayesNet () to create the Bayesian network .
         self.diseases=list()
@@ -45,6 +47,7 @@ class MDProblem :
         self.exams=list()
         self.results=list()
         self.propagation_probability=0
+        self.total_time_steps=0
                 
         for line in fh:
             line = line.rstrip()
@@ -63,8 +66,11 @@ class MDProblem :
             elif(info[0]=='E'):
                 self.exams.append(Exam(info[1],info[2],info[3],info[4]))
             elif(info[0]=='M'):
+                self.total_time_steps+=1
+                time_step_results=list()
                 for i in range(1,len(info),2):
-                    self.results.append(Result(info[i],info[i+1]))
+                    time_step_results.append(Result(info[i],info[i+1]))
+                self.results.append(time_step_results)
             elif(info[0]=='P'):
                 self.propagation_probability=info[1]
         
@@ -75,8 +81,10 @@ class MDProblem :
             print(symptom)
         for exam in self.exams:
             print(exam)
-        for result in self.results:
-            print(result)
+        for time_step in self.results:
+            for result in time_step:
+                print(result,end=" ")
+            print("\n",end="")
         print(self.propagation_probability)
         
     def solve(self) :
@@ -84,4 +92,13 @@ class MDProblem :
         # solution returning the solution disease name and likelihood .
         # Use probability . elimination_ask () to perform probabilistic
         # inference .
+        """
+        [Figure 14.11]
+        Compute bn's P(X|e) by variable elimination.
+        >>> elimination_ask('Burglary', dict(JohnCalls=T, MaryCalls=T), burglary
+        ...  ).show_approx()
+        'False: 0.716, True: 0.284'"""
+        for i in range(self.total_time_steps):
+            elimination_ask(X,e,self.BayesNet)
+
         return (disease,likelihood )
