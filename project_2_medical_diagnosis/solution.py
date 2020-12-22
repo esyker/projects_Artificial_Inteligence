@@ -84,13 +84,14 @@ class MDProblem :
                 self.propagation_probability=float(info[1])
     
     def get_parents(self):
-        parents={disease.name:set([disease.name]) for disease in self.Diseases}
+        parents={disease.name:list([disease.name]) for disease in self.Diseases}
         for symptom in self.Symptoms:
             for i in range(len(symptom.rel_diseases)):
                 for j in range(len(symptom.rel_diseases)):
                         if(i!=j):
                             # Create connection between diseases wih the same symptoms
-                            parents[symptom.rel_diseases[i]].add(symptom.rel_diseases[j])
+                            if(symptom.rel_diseases[j] not in parents[symptom.rel_diseases[i]]):
+                                parents[symptom.rel_diseases[i]].append(symptom.rel_diseases[j])
         return parents
         
     def get_probability_for_disease(self,entry):
