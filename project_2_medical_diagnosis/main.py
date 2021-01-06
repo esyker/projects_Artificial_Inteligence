@@ -1,8 +1,8 @@
-from solution import MDProblem
+from solution_submission import MDProblem
 
 fh=open("problem.txt")
 problem=MDProblem(fh)
-problem.toString()
+#problem.toString()
 '''
 parents=problem.get_parents()
 for disease in parents.keys():

@@ -1,7 +1,13 @@
 from probability import BayesNet
 from probability import elimination_ask
+from itertools import product
 
 class Disease :
+    '''
+    --------------------------------------------------------------
+    Disease name
+    --------------------------------------------------------------
+    '''
     def __init__ (self,name):
         self.name=name
     
@@ -9,6 +15,11 @@ class Disease :
      return self.name
  
 class Symptom:
+    '''
+    --------------------------------------------------------------
+    Symptom name and associated diseases
+    --------------------------------------------------------------
+    '''
     def __init__ (self,name,rel_diseases):
         self.name=name
         self.rel_diseases=rel_diseases
@@ -20,6 +31,12 @@ class Symptom:
      return string
         
 class Exam:
+    '''
+    --------------------------------------------------------------
+    Exam name, associated disease, True Positive Rate and False
+    Positive Rate
+    --------------------------------------------------------------
+    '''
     def __init__ (self,name,disease,TPR,FPR):
         self.name=name
         self.disease=disease
@@ -30,6 +47,11 @@ class Exam:
      return "E"+self.name+" "+self.disease+" "+self.TPR+" "+self.FPR
 
 class Result:
+    '''
+    --------------------------------------------------------------
+    Exam name and associated Result (True/False)
+    --------------------------------------------------------------
+    '''
     def __init__ (self,exam_name,result):
         self.exam_name=exam_name
         self.result=result
@@ -39,8 +61,15 @@ class Result:
  
 class MDProblem :
     def __init__ (self,fh):
-        # Place here your code to load problem from opened file object fh
-        # and use probability . BayesNet () to create the Bayesian network .
+        '''
+        -------------------------------------------------------------------------------
+        Function to load the problem from a file, create the bayseian network,
+        get the measured evidences and get the desired output nodes name 
+        (self.last_nodes)
+        -------------------------------------------------------------------------------
+        '''
+        # Load problem from opened file object fh
+        # and use create_bayes_network() to create the Bayesian network .
         self.Diseases=list()
         self.Symptoms=list()
         self.Exams=dict()
@@ -52,9 +81,14 @@ class MDProblem :
         self.bayes_network=self.create_bayes_network()
         self.evidences=self.get_evidences()
         n = len(self.Measurements)-1
-        self.last_nodes = [disease.name+f'@{n}' for disease in self.Diseases]
+        self.last_nodes = [disease.name+f'#t{n}' for disease in self.Diseases]
         
     def load_from_file(self,fh):
+        '''
+        -------------------------------------------------------------------------------
+        Function to load the problem from an opened file object fh
+        -------------------------------------------------------------------------------
+        '''
         for line in fh:
             line = line.rstrip()
             if not line:
@@ -83,7 +117,24 @@ class MDProblem :
             elif(info[0]=='P'):
                 self.propagation_probability=float(info[1])
     
+    def get_evidences(self):
+        '''
+        -------------------------------------------------------------------------------
+        Function to get the measured evidences (exams).
+        Evidences are used on elimination_ask to solve the Bayesian Network
+        -------------------------------------------------------------------------------
+        '''
+        evidence = {m.exam_name+f'#t{i}': m.result for i
+                    , measurements in enumerate(self.Measurements) for m in measurements}
+        return evidence
+    
     def get_parents(self):
+        '''
+        -------------------------------------------------------------------------------
+        Function to get the diseases with sharing symptons
+        Returns a dictionary with a disease as a key and related diseases as entry
+        -------------------------------------------------------------------------------
+        '''
         parents={disease.name:list([disease.name]) for disease in self.Diseases}
         for symptom in self.Symptoms:
             for i in range(len(symptom.rel_diseases)):
@@ -95,9 +146,19 @@ class MDProblem :
         return parents
         
     def get_probability_for_disease(self,entry):
-        if(entry[0]==False):#if there is no disease@t there will be no disease@t+1
+        '''
+        ----------------------------------------------------------------------------------
+        Function to get the disease probability from the truth table entry of the diseases
+        ----------------------------------------------------------------------------------
+        # The probability of having disease i will be smaller for t + 1
+          , when having at least one other disease with sharing symptoms at t. 
+          We call this the propagation probability.
+        #Paremeters:
+            entry:Truth Table entry
+        '''
+        if(entry[0]==False):#if there is no disease#t there will be no disease#t+1
             return 0
-        else:#the patient had the disease@t
+        else:#the patient had the disease#t
             for disease in entry[1:]:
                 #check if there is a disease with sharing symptoms
                 if disease==True:
@@ -105,89 +166,77 @@ class MDProblem :
             return 1#there is no disease with sharing symtpoms
         
     def get_conditional_probabilities(self,parents):
-        from itertools import product
-
-        # Initialize dictionary
+        '''
+        ----------------------------------------------------------------------------
+        Function to get the truth table of the disease|other_diseases and associated 
+        conditional probability P(disease|other_diseases)
+        ----------------------------------------------------------------------------
+        #Paremeters:
+            parents: Dictionary containing the diseases with sharing symptons at t-1
+        '''
+        # Initialize conditional probabilities
         cond_prob = {disease: 0 for disease in self.Diseases}
 
         for disease in self.Diseases:
-            # Number of columns of the truth table
             n = len(parents[disease.name])
-            # Generate the truth table input
+            # Generate the truth table
             table = list(product([False, True], repeat=n))
             prob=[self.get_probability_for_disease(entry) for entry in table]
-
             cond_prob[disease.name] = dict(zip(table, prob))
         return cond_prob
     
     def create_bayes_network(self):
+        '''
+        ----------------------------------------------------------------------------
+        Function to create the Bayesian Network using get_parents(),
+        get_conditional_probabilities(parents), exams TPR and FPR and measurements
+        ----------------------------------------------------------------------------
+        '''
         bayes_net=BayesNet()
+        #P_D is the probability of disease at t0. P_D=0.5 since there is no 
+        #information at t0
         for disease in self.Diseases:
-            bayes_net.add((disease.name+'@0', '', self.P_D))
+            bayes_net.add((disease.name+'#t0', '', self.P_D))
         
+        #Get the diseases with sharing symptons at the several time steps
         parents=self.get_parents()
+        #Get the conditional probabilities using the diseases with sharing symptons
         conditional_prob=self.get_conditional_probabilities(parents)
-        # Add connections between diseases at the time steps 
-        #(the amount of time steps correspond to the number of instants of the exam results)
+        
+        #Add the calculated conditional_probabilities information to the bayes network
         for i in range(1, len(self.Measurements)):
             for disease in self.Diseases:
-                # Getting parents name at step i-1
-                parents_i = [parent+f'@{i-1}' for parent in parents[disease.name]]
-
-                # Adding node to the net. Name is the name of the disease plus @<time instant>, parents is a string of all
-                # the parents_i separated by spaces, and the conditional probability depends on the disease propagation law
-                bayes_net.add((disease.name+f'@{i}', ' '.join(parents_i), conditional_prob[disease.name]))
+                parents_i = [parent+f'#t{i-1}' for parent in parents[disease.name]]
+                bayes_net.add((disease.name+f'#t{i}', ' '.join(parents_i), conditional_prob[disease.name]))
         
-        
-        # Get a dictionary containing the conditional probabilities tables from the exams nodes
+        #Get the probabilitiy of the exam being false/true knowing that the patient has the disease
         exam_prob = {exam : {False: self.Exams[exam].FPR
             , True: self.Exams[exam].TPR} for exam in self.Exams}
         
-        # Add measurements nodes at all time steps
+        #Add the measurements/exam information to the Bayesian Network
         for i, measurements in enumerate(self.Measurements):
             for m in measurements:
-                #Exam name
-                exam = m.exam_name
-                # Adding node to the net. Name is the exam name plus @<time instant>, parent is the disease that
-                # the exam diagnoses plus @<time instant> and conditional probability corresponds to the FPR and TPR.
-                bayes_net.add((exam+f'@{i}', self.Exams[exam].disease+f'@{i}', exam_prob[exam]))
+                exam = m.exam_name    
+                bayes_net.add((exam+f'#t{i}', self.Exams[exam].disease+f'#t{i}', exam_prob[exam]))
 
         return bayes_net
-                
-    def toString(self):
-        for disease in self.Diseases:
-            print(disease)
-        for symptom in self.Symptoms:
-            print(symptom)
-        for exam in self.Exams:
-            print(exam)
-        for time_step in self.Measurements:
-            for result in time_step:
-                print(result,end=" ")
-            print("\n",end="")
-        print(self.propagation_probability)
-    
-    def get_evidences(self):
-
-        evidence = {m.exam_name+f'@{i}': m.result for i
-                    , measurements in enumerate(self.Measurements) for m in measurements}
-        return evidence
     
     def solve(self) :
-        # Place here your code to determine the maximum likelihood
-        # solution returning the solution disease name and likelihood .
-        # Use probability . elimination_ask () to perform probabilistic
-        # inference .
-
-        results = {disease.rsplit('@', 1)[0]: elimination_ask(disease, self.evidences
+        '''
+        ----------------------------------------------------------------------------
+        Function to solve the Bayesian Network and return the disease with maximum
+        probability
+        ----------------------------------------------------------------------------
+        '''
+        #get the diseases at the last time step (self.last_nodes)
+        results = {disease.rsplit('#', 1)[0]: elimination_ask(disease, self.evidences
                    , self.bayes_network) for disease in self.last_nodes}
         
-
         print('Results')
         for disease in results:
             print(disease, '\t', results[disease].show_approx())
         
-        # Get the diseases with maximum probability and its probability
+        #get the disease with maximum probability
         disease = max(results.keys(), key=(lambda disease: results[disease][True]))
         likelihood = results[disease][True]
         
