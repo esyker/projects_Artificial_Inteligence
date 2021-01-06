@@ -188,8 +188,8 @@ class MDProblem :
     def create_bayes_network(self):
         '''
         ----------------------------------------------------------------------------
-        Function to create the Bayesian Network using get_parents(),
-        get_conditional_probabilities(parents), exams TPR and FPR and measurements
+        Function to create the Bayesian Network using diseases conditional
+        probabilities (propagation probability) and exams TPR and FPR
         ----------------------------------------------------------------------------
         '''
         bayes_net=BayesNet()
