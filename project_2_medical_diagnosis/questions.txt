@@ -1,10 +1,17 @@
 1. Explain how the problem was modelled with a Bayesian network.
 
 Bayesian Network
-The Bayesian network represents the diseases at certain time instances (t). So the network contains both events and time information. To represent an event at time step i the format used is “event#ti”. So,for example, in the BN we show the disease covid event at time step 1 with the representation “covid#t1”. The BN uses the results from the exams at timestep i to calculate the probability of having the disease at that specific timestep. This data is incorporated into the network using the True Positive Rate and False Positive Rate of each specific exam.
+The Bayesian network represents the events at certain time instances (t).  To represent an event at time step i the format used is “event#ti”. So,for example, in the BN we show the disease covid event at time step 1 with the representation “covid#t1”. The BN uses the results from the exams at timestep i to calculate the probability of having the disease at that specific timestep. This data is incorporated into the network using the True Positive Rate and False Positive Rate of each specific exam.
 Since no information was given regarding the diseases at timestep 0, we considered a probability of 50% since the likelihood of having the disease or not is equal.
 This BN has to follow a series of rules : Diseases can not appear during the time steps, so if someone does not have the disease at the start (t = 0), they will not have it going forward; if there is a probability p of having a certain disease at timestep i ,  and if there are other diseases with sharing symptoms the disease is defined by P (propagation probability); And if a patient has a disease that doesn’t share symptoms with another they will continue to have that disease in the following timestep.
+There are two types of nodes : 
+•	Diseases 
+•	Exams
+The connection between each disease(edges) are represented by the symptoms shared between each connected disease.
 So in the BN there are certain types of connections: 
 •	Disease at timestep i and a disease at timestep i-1 with common symptoms
 •	Disease at timestep i and exam associated to the disease at timestep i 
+
 In the end, this returns the disease with the highest probability after time T, and the corresponding value.
+
+
