@@ -1,4 +1,4 @@
-from solution_submission import MDProblem
+from solution import MDProblem
 
 fh=open("problem.txt")
 problem=MDProblem(fh)

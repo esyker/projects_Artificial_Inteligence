@@ -1,17 +1,45 @@
 1. Explain how the problem was modelled with a Bayesian network.
 
-Bayesian Network
-The Bayesian network represents the events at certain time instances (t).  To represent an event at time step i the format used is “event#ti”. So,for example, in the BN we show the disease covid event at time step 1 with the representation “covid#t1”. The BN uses the results from the exams at timestep i to calculate the probability of having the disease at that specific timestep. This data is incorporated into the network using the True Positive Rate and False Positive Rate of each specific exam.
-Since no information was given regarding the diseases at timestep 0, we considered a probability of 50% since the likelihood of having the disease or not is equal.
-This BN has to follow a series of rules : Diseases can not appear during the time steps, so if someone does not have the disease at the start (t = 0), they will not have it going forward; if there is a probability p of having a certain disease at timestep i ,  and if there are other diseases with sharing symptoms the disease is defined by P (propagation probability); And if a patient has a disease that doesn’t share symptoms with another they will continue to have that disease in the following timestep.
+The Bayesian network represents both events and time, this is, the events at certain time instances (t).  
+To represent an event at time step i the format used is “event#ti”. 
+So, for example, in the BN we show the disease covid event at time step 1 with the representation “covid#t1”. 
+Since no information was given regarding the diseases, at timestep 0, we considered an initial probability of having any disease (PD) of 50%, since the likelihood of having the disease or not at the beginning is equal if no information is available.
 There are two types of nodes : 
 •	Diseases 
 •	Exams
-The connection between each disease(edges) are represented by the symptoms shared between each connected disease.
-So in the BN there are certain types of connections: 
-•	Disease at timestep i and a disease at timestep i-1 with common symptoms
-•	Disease at timestep i and exam associated to the disease at timestep i 
+So in the BN there are certain types of connections or edges between these nodes: 
+•	A disease at timestep i-1 is parent to another disease with common symptoms at timestep i.
+	This models the probagation probability (PP).
+	If the patient had the disease1 at timestep i-1 and disease1 and disease2 have common symptons:
+		P(disease1#ti|disease2#ti-1=True,disease1#ti-1=True)=PP 
 
-In the end, this returns the disease with the highest probability after time T, and the corresponding value.
+•	A disease at timestep i-1 is parent to itself at timestep i.
+	This models the fact that if the patient does not have the disease at timestep i will not have it at timestep i+1, but if he had it this probability will be 1 if there are no other diseases with common symptons.
+	If there are no other disease with common symptons:
+		P(disease#ti|disease#ti-1=False,diseases_with_common_symptons=False)=0 and P(disease#ti|disease#ti-1=True,diseases_with_common_symptons=False)=1.
+
+•	Disease at timestep i is parent to an exam at timestep i that measures it.
+	This models the exam TPR and FPR. P(exam#ti=F|disease#ti=T)=FPR and P(exam#ti=True|disease=True)=TPR
+
+Imagine two diseases, disease1 and disease2, with common symptons and an exam E1 associated to the disease2.
+This is modeled in the Baeysian Network for two timesteps t0 and t1 as:
+     	     ______________      ________________
+            | disease1#t0  |    | disease2#t0    |       _______
+            |______________|    |________________|----->| E1#t0 |
+                    | \_______         / |              |_______|
+                    |   ______\_______/  |        
+                    |  /       \_______  |
+                    | /                \ |
+             _______v_v____      ______v_v_______
+            | disease1#t1  |    | disease2#t1    |       ______
+            |______________|    |________________|----->| E1#t1|
+                                                        |______|
+
+The evidences utilized to solve the Bayesian Network are the exams results (measures).
+The Bayesian Network is solved using inference with variable elimination and the evidences.
+The diseases probabilities at all the given timesteps are infered.
+In the end, is returned the disease with the highest infered probability, at the last timestep.
+
+
 
 
